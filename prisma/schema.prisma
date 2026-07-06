@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SpaceType {
+  DESK
+  MEETING_ROOM
+  PHONE_BOOTH
+}
+
+enum BookingStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model User {
+  id  String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  firstname String
+  lastname String
+  role Role @default(USER)
+
+  teamId String?
+  team Team? @relation(fields: [teamId], references: [id])
+  balance Int @default(1000)
+
+  booking Booking[]
+
+  followedBy User[] @relation("UserFollows")
+  following User[] @relation("UserFollows")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Team {
+  id String @id @default(uuid())
+  name String @unique
+  monthlyBudget Int @default(1000)
+
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teams")
+}
+
+model Space {
+  id String @id @default(uuid())
+  name String
+  type SpaceType
+  capacity Int @default(1)
+  pricePerHour Int @default(10)
+
+  mapX Float?
+  mapY Float?
+
+  isActive Boolean @default(true)
+
+  bookings Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("spaces")
+}
+
+model Booking {
+  id String @id @default(uuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  spaceId String
+  space Space @relation(fields: [spaceId], references: [id])
+
+  startTime DateTime
+  endTime DateTime
+  status BookingStatus @default(PENDING)
+
+  totalCost Int
+  checkInCode String? @unique
+  isCheckedIn Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([spaceId, startTime, endTime])
+  @@map("booking")
+}
