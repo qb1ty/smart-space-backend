@@ -43,4 +43,8 @@ export class AuthService {
         const { passwordHash: _, ...result } = user
         return result
     }
+
+    async logout() {
+        return { message: "Успешный выход" }
+    }
 }
