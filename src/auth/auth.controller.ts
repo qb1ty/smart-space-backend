@@ -1,11 +1,9 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { LoginInterceptor } from './interceptors/login.interceptors';
-import { LogoutInterceptor } from './interceptors/logout.interceptors';
-import { AuthGuard } from 'src/guard/auth.guard';
+import { RegisterDto, LoginDto } from './dto';
+import { LoginInterceptor, LogoutInterceptor } from './interceptors';
 import { SessionInfo } from './decorators/session-user.decorator';
+import { AuthGuard } from 'src/guard/auth.guard';
 
 @Controller("auth")
 export class AuthController {
