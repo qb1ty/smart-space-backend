@@ -1,34 +1,48 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseBoolPipe } from '@nestjs/common';
+import { SpaceType } from '@prisma/client';
+import { AuthGuard, AdminGuard } from 'src/guard';
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
 
-@Controller('spaces')
+@Controller("spaces")
+
 export class SpacesController {
-  constructor(private readonly spacesService: SpacesService) {}
+  constructor(private readonly spaceService: SpacesService) {}
 
   @Post()
-  create(@Body() createSpaceDto: CreateSpaceDto) {
-    return this.spacesService.create(createSpaceDto);
+  @UseGuards(AuthGuard, AdminGuard)
+  create(@Body() dto: CreateSpaceDto) {
+    return this.spaceService.create(dto)
   }
 
   @Get()
-  findAll() {
-    return this.spacesService.findAll();
+  @UseGuards(AuthGuard)
+  findAll(
+    @Query("type") type: SpaceType,
+    @Query("activeOnly", new ParseBoolPipe({ optional: true }))  activeOnly: boolean
+  ) {
+    return this.spaceService.findAll(type, activeOnly)
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.spacesService.findOne(+id);
+  @Get(":id")
+  @UseGuards(AuthGuard)
+  findOne(@Param("id") id: string) {
+    return this.spaceService.findOne(id)
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSpaceDto: UpdateSpaceDto) {
-    return this.spacesService.update(+id, updateSpaceDto);
+  @Patch(":id")
+  @UseGuards(AuthGuard, AdminGuard)
+  update(
+    @Param("id") id: string,
+    @Body() dto: UpdateSpaceDto
+  ) {
+    return this.spaceService.update(id, dto)
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.spacesService.remove(+id);
+  @Delete(":id")
+  @UseGuards(AuthGuard, AdminGuard)
+  remove(@Param("id") id: string) {
+    return this.spaceService.remove(id)
   }
 }
