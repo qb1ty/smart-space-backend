@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, ParseBoolPipe } from '@nestjs/common';
 import { SpaceType } from '@prisma/client';
-import { AuthGuard, AdminGuard } from 'src/guard';
+import { AuthGuard, AdminGuard } from 'src/common/guard';
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
