@@ -29,8 +29,9 @@ export function handleServiceError(
         switch (error.code) {
             case "P2002":
                 // Нарушения уникальности (Unique constraint failed)
-                const target = (error.meta?.target as string[])?.join(", ") || "none"
-                throw new ConflictException(`Запись с таким значением (${target}) уже существует.`)
+                // @ts-ignore: Игнорируем проверку типов для нестандартного мета-поля Prisma
+                const target = (error.meta?.driverAdapterError?.cause?.constraint?.fields).join(", ") || ""
+                throw new ConflictException(`Запись с значением (${target}) уже существует.`)
 
             case "P2025":
                 // Запись не найдена (Record to update/delete not found)
