@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SpacesModule } from './spaces/spaces.module';
+import { BookingModule } from './booking/booking.module';
 import KeyvRedis from '@keyv/redis';
 
 @Module({
@@ -18,7 +19,8 @@ import KeyvRedis from '@keyv/redis';
     PrismaModule,
     AuthModule,
     UsersModule,
-    SpacesModule
+    SpacesModule,
+    BookingModule,
   ],
   controllers: [],
   providers: [],
