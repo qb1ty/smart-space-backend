@@ -12,7 +12,7 @@ export function validateTimeRange(startTime: Date, endTime: Date): void {
     }
 }
 
-export function calculateTotalCost(startTime: Date, endTime: Date, pricePerHour: number) {
+export function calculateTotalCost(startTime: Date, endTime: Date, pricePerHour: number): number {
     const durationHour = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60)
     return Math.ceil(durationHour * pricePerHour)
 }
