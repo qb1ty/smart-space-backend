@@ -4,7 +4,7 @@ import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 export class FilterBookingDto {
     @IsEnum(BookingStatus, { message: "Неверный статус бронирование" })
     @IsOptional()
-    static?: BookingStatus
+    status?: BookingStatus
 
     @IsString()
     @IsOptional()
