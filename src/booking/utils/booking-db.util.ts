@@ -1,5 +1,6 @@
-import { BadRequestException, ConflictException } from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { BookingStatus, Prisma } from "@prisma/client";
+import { FilterBookingDto } from "../dto/filter-booking.dto";
 
 export async function checkSpaceAvailability(
     tx: Prisma.TransactionClient,
@@ -17,12 +18,14 @@ export async function checkOverlappingBookings(
     tx: Prisma.TransactionClient,
     spaceId: string,
     startTime: Date,
-    endTime: Date
+    endTime: Date,
+    excludeBookingId?: string
 ) {
     const overlapping = await tx.booking.findFirst({
         where: {
             spaceId,
             status: { in: [BookingStatus.PENDING, BookingStatus.ACTIVE] },
+            ...(excludeBookingId && { id: { not: excludeBookingId } }),
             AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }]
         }
     })
@@ -46,4 +49,43 @@ export async function deductUserBalance(
         where: { id: userId },
         data: { balance: { decrement: cost } }
     })
+}
+
+export async function getValidBookingForMutation(
+    tx: Prisma.TransactionClient,
+    bookingId: string,
+    userId: string
+) {
+    const booking = await tx.booking.findUnique({ where: { id: bookingId } })
+
+    if (!booking) {
+        throw new NotFoundException("Бронирование не найдено")
+    }
+
+    if (booking.userId !== userId) {
+        throw new ForbiddenException("Нет прав на изменение этого бронирование")
+    }
+
+    if (booking.status !== BookingStatus.PENDING && booking.status !== BookingStatus.ACTIVE) {
+        throw new BadRequestException("Изменить можно только активное или ожидающее бронирование")
+    }
+
+    return booking
+}
+
+export function buildBookingFilterQuery(
+    userId: string,
+    query: FilterBookingDto
+) {
+    return {
+        userId,
+        ...(query.status && { status: query.status }),
+        ...(query.spaceId && { spaceId: query.spaceId }),
+        ...(query.from || query.to ? {
+            startTime: {
+                ...(query.from && { gte: new Date(query.from) }),
+                ...(query.to && { lte: new Date(query.to) })
+            }
+        } : {})
+    }
 }
