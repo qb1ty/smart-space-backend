@@ -28,10 +28,17 @@ export function getTotalRevenueQuery(
 
 export function getBookingsCountQuery(
     prisma: PrismaClient,
+    where: Prisma.BookingWhereInput
+) {
+   return prisma.booking.count({ where })
+}
+
+export function getTopSpacesQuery(
+    prisma: PrismaClient,
     where: Prisma.BookingWhereInput,
     take: number
 ) {
-    return prisma.booking.groupBy({
+     return prisma.booking.groupBy({
         by: ["spaceId"],
         _count: { id: true },
         _sum: { totalCost: true },
