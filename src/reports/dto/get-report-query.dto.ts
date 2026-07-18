@@ -1,6 +1,6 @@
 import { IsDateString, IsOptional } from "class-validator";
 
-export class CreateReportDto {
+export class GetReportQueryDto {
     @IsDateString({}, { message: "Параметр (from) должен быть валидной ISO строкой" })
     @IsOptional()
     from?: string
