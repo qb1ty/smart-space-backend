@@ -1,8 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { handleServiceError } from 'src/common/utils';
-import { buildActiveBookingFilter, getBookingsCountQuery, getCancelledBookingsCountQuery, getTopSpacesQuery, getTotalRevenueQuery } from './utils/reports-db.util';
+import { buildActiveBookingFilter, getAllSpacesQuery, getAllUsersDictQuery, getBookingForEfficiencyQuery, getBookingsCountQuery, getCancelledBookingsCountQuery, getTopSpacesQuery, getTotalRevenueQuery, getUsersActiveStatsQuery, getUsersCancelledStatsQuery } from './utils/reports-db.util';
 import { GetReportQueryDto } from './dto/get-report-query.dto';
+import { calculateCancellationRate, calculateHours, calculateOccupancyRate } from './utils/reports-calculator.util';
 
 @Injectable()
 export class ReportsService {
@@ -53,6 +54,80 @@ export class ReportsService {
       }
     } catch (err: any) {
       handleServiceError(err, this.logger, "Ошибка при генерации аналитического отчета")
+    }
+  }
+
+  async getWorkspacesEfficiency(period: number, query: GetReportQueryDto) {
+    const { from, to } = query
+
+    try {
+      const activeFilter = buildActiveBookingFilter(from, to)
+
+      const [spaces, bookings] = await this.prisma.$transaction([
+        getAllSpacesQuery(this.prisma),
+        getBookingForEfficiencyQuery(this.prisma, activeFilter)
+      ])
+
+      const report = spaces.map((space) => {
+        const spaceBookings = bookings.filter((b) => b.spaceId === space.id)
+
+        const totalRevenue = spaceBookings.reduce((acc, val) => acc + val.totalCost, 0)
+        const bookedHours = spaceBookings.reduce((acc, val) => acc + calculateHours(val.startTime, val.endTime), 0)
+
+        return {
+          spaceId: space.id,
+          name: space.name,
+          type: space.type,
+          pricePerHour: space.pricePerHour,
+          bookingCount: spaceBookings.length,
+          bookedHours: Math.round(bookedHours),
+          revenue: totalRevenue,
+          occupancyRate: calculateOccupancyRate(bookedHours, period)
+        }
+      })
+
+      return report.sort((a, b) => a.revenue - a.revenue)
+    } catch (err: any) {
+      handleServiceError(err, this.logger, "Ошибка при генерации отчета по пространствам")
+    }
+  }
+
+  async getUsersActivity(query: GetReportQueryDto) {
+    const { from, to } = query
+
+    try {
+      const activeFilter = buildActiveBookingFilter(from, to)
+
+      const [activeStats, cancelledStats, users] = await this.prisma.$transaction([
+        getUsersActiveStatsQuery(this.prisma, activeFilter),
+        getUsersCancelledStatsQuery(this.prisma, from, to),
+        getAllUsersDictQuery(this.prisma)
+      ])
+
+      const activityReport = users.map((user) => {
+        const active = activeStats.find((s) => s.userId === user.id)
+        const cancelled = cancelledStats.find((s) => s.userId === user.id)
+
+        const bookingCount = active?._count.id || 0
+        const cancelledCount = cancelled?._count.id || 0
+        const totalAttempts = bookingCount + cancelledCount
+
+        return {
+          userId: user.id,
+          name: `${user.firstname} ${user.lastname}`.trim() || user.email,
+          email: user.email,
+          totalSpent: active?._sum.totalCost || 0,
+          successfulBookings: bookingCount,
+          cancelledBookings: cancelledCount,
+          cancellationRate: calculateCancellationRate(cancelledCount, totalAttempts)
+        }
+      })
+
+      return activityReport
+        .filter((u) => u.successfulBookings > 0 || u.cancelledBookings > 0)
+        .sort((a, b) => b.totalSpent - a.totalSpent)
+    } catch (err: any) {
+      handleServiceError(err, this.logger, "Ошибка при генерации отчета активности пользователей")
     }
   }
 }
