@@ -70,7 +70,7 @@ export function getCancelledBookingsCountQuery(
     })
 }
 
-export function getAllSpaces(prisma: PrismaClient) {
+export function getAllSpacesQuery(prisma: PrismaClient) {
     return prisma.space.findMany({
         where: { isActive: true },
         select: { id: true, name: true, type: true, pricePerHour: true },
