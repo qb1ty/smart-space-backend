@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { BookingModule } from './booking/booking.module';
+import { ReportsModule } from './reports/reports.module';
 import KeyvRedis from '@keyv/redis';
 
 @Module({
@@ -21,6 +22,7 @@ import KeyvRedis from '@keyv/redis';
     UsersModule,
     SpacesModule,
     BookingModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],
