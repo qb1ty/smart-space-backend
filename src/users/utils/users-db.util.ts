@@ -18,7 +18,7 @@ export function getSafeUserByIdQuery(prisma: PrismaClient, id: string) {
     })
 }
 
-export function getAllUSersQuery(prisma: PrismaClient, activeOnly: boolean) {
+export function getAllUSersQuery(prisma: PrismaClient, activeOnly = false) {
     return prisma.user.findMany({
         where: activeOnly ? { isActive: activeOnly } : {},
         select: SAFE_USER_SELECT,
