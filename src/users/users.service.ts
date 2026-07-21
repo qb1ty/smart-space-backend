@@ -37,9 +37,11 @@ export class UsersService {
     }
   }
 
-  async findAll(activeOnly?: boolean) {
+  async findAll(activeOnly?: string) {
+    const active = activeOnly === "true"
+
     try {
-      return await getAllUSersQuery(this.prisma, activeOnly)
+      return await getAllUSersQuery(this.prisma, active)
     } catch (err: any) {
       handleServiceError(err, this.logger, "Ошибка при получения списка сотрудников")
     }
