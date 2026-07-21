@@ -38,6 +38,8 @@ model User {
   team Team? @relation(fields: [teamId], references: [id])
   balance Int @default(1000)
 
+  isActive Boolean @default(true)
+
   booking Booking[]
 
   followedBy User[] @relation("UserFollows")
