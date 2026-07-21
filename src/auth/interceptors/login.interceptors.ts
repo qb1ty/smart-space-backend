@@ -11,6 +11,7 @@ export class LoginInterceptor implements NestInterceptor {
 
                 req.session.userId = user.id
                 req.session.role = user.role
+                req.session.isActive = user.isActive
             })
         )
     }
