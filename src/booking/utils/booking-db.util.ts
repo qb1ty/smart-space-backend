@@ -41,6 +41,11 @@ export async function deductUserBalance(
     cost: number
 ) {
     const user = await tx.user.findUnique({ where: { id: userId } })
+    
+    if (!user || !user.isActive) {
+        throw new ForbiddenException("Ваш аккаунт декактивирован. Бронирование и списание недоступно")
+    }
+
     if (!user || user.balance < cost) {
         throw new BadRequestException(`Недостаточно балов. Требуется: ${cost}, у вас: ${user?.balance || 0}`)
     }
